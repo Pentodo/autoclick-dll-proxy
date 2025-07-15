@@ -1,0 +1,46 @@
+name: Build and Release DLL
+
+on:
+  push:
+    tags:
+      - "v*"
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MinGW-w64
+        run: choco install mingw -y
+      - name: Build DLL
+        run: |
+          g++ -shared -o dinput8.dll AutoClickProxy.cpp -static-libgcc -static-libstdc++ -static
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dinput8
+          path: dinput8.dll
+  release:
+    needs: build
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+      - name: List artifacts
+        run: |
+          echo "Listing artifacts directory:"
+          dir ./artifacts
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ./artifacts/**/dinput8.dll
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          token: ${{ github.token }}
