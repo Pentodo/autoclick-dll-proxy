@@ -43,10 +43,17 @@ For Windows, it is recommended to use MinGW-w64 (GCC for Windows), but it is not
 
 ```sh
 # Compile as DLL, statically linking C++ libraries
- g++ -shared -o dinput8.dll AutoClickProxy.cpp -static-libgcc -static-libstdc++ -static
+g++ -shared -static-libgcc -static-libstdc++ -static -O2 -o dinput8.dll AutoClickProxy.cpp
 ```
 
-Place the resulting `dinput8.dll` in the target application's folder.
+Alternatively, the Makefile is available:
+
+```sh
+# Run 'make clean' to delete the DLL before building, if needed
+make
+```
+
+Place the resulting `dinput8.dll` in the target application's binary folder.
 
 ## ⚠️ Warnings
 
