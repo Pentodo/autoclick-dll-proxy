@@ -64,24 +64,22 @@ struct ClickPoint
 
 // Example: TIME MODE
 // ----
-// TimeClickBehavior shieldBoostInterval(45000);
-// TimeClickBehavior laserBoostInterval(5000);
-// TimeClickBehavior kineticVolleyInterval(45000);
+// TimeClickBehavior fiveSeconds(5000);
 // ----
 // Benefits: more performance-friendly, less CPU usage.
 // Case: if you want to click at specific intervals regardless of the pixel color.
 
 // Example: COLOR MODE
 // ----
-ColorClickBehavior whiteColor(RGB(255, 255, 255));
+ColorClickBehavior white(RGB(255, 255, 255));
 // ----
 // Benefits: more accurate, clicks only when the pixel color matches.
 // Case: if you want to click only when a specific pixel color is present.
 
 ClickPoint clickPoints[] = {
-    {31, 807, &whiteColor},
-    {99, 824, &whiteColor},
-    {167, 817, &whiteColor}};
+    {31, 807, &white},
+    {99, 824, &white},
+    {167, 817, &white}};
 const int numPoints = sizeof(clickPoints) / sizeof(clickPoints[0]);
 
 void ClickPointThread(const ClickPoint &point, HWND hwnd)
