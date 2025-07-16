@@ -6,13 +6,12 @@ A Windows DLL proxy for `dinput8.dll` that automatically clicks at configurable 
 
 ## ✨ Features
 
-- ⚡ **Automatic Mouse Clicks** at custom X/Y positions
-- 🕒 **Independent Intervals** for each click point
-- 🛡️ **No Overlapping Clicks** (uses coprime intervals)
-- 🪟 **Client Area Coordinates** (ignores window title bar)
-- 🔗 **DirectInput8 Proxy** (forwards calls to original system DLL)
-- 🎨 **Color-Based Clicks**: Click only when a pixel matches a specific color
-- 🧩 **Flexible Click Behavior**: Choose between time-based or color-based clicking for each point
+- ⚡ Automatic mouse clicks at custom pixel positions
+- 🕒 Configure each click for time interval or pixel color
+- ➕ Multiple click points supported
+- 🪟 Runs as a proxy DLL (`dinput8.dll`) for easy injection
+- 🔒 Thread-safe: prevents simultaneous clicks
+- 🛠️ Simple configuration in [AutoClickProxy.cpp](AutoClickProxy.cpp)
 
 ## 🖱️ How It Works
 
@@ -24,44 +23,27 @@ A Windows DLL proxy for `dinput8.dll` that automatically clicks at configurable 
 
 ## ⚙️ Configuration
 
-Edit the `ClickPoint` array and behaviors in `AutoClickProxy.cpp` as desired:
-
-### ⏱️ Time-Based Clicking
-
-Use independent intervals for each point:
+Define your click points and behaviors in [AutoClickProxy.cpp](AutoClickProxy.cpp):
 
 ```cpp
-// Example 1: Time-based click behaviors
-TimeClickBehavior shieldBoostInterval(45001);
-TimeClickBehavior laserBoostInterval(5003);
-TimeClickBehavior kineticVolleyInterval(45011);
+// Time-based click
+TimeClickBehavior fiveSeconds(5000);
 
-ClickPoint clickPoints[] = {
-    {30, 834, &shieldBoostInterval},
-    {100, 834, &laserBoostInterval},
-    {170, 834, &kineticVolleyInterval}
-};
-```
-
-### 🎨 Color-Based Clicking
-
-Click only when the pixel color matches:
-
-```cpp
-// Example 2: Color-based click behavior
+// Color-based click
 ColorClickBehavior white(RGB(255, 255, 255));
 
+// Example using both methods
 ClickPoint clickPoints[] = {
-    {31, 807, &white},
-    {99, 824, &white},
-    {167, 817, &white}
+    {30, 640, &fiveSeconds},    // time-based
+    {100, 640, &fiveSeconds},   // time-based
+    {170, 800, &white}          // color-based
 };
 ```
 
-**Parameters:**
+**📝 ClickPoint attributes**
 
-- `x`, `y`: Horizontal and vertical position of the click, relative to the window's client area (the content area, not including the title bar or window borders)
-- `behavior`: Pointer to a click behavior (time-based or color-based)
+- `x`, `y`: Horizontal and vertical position of the pixel to click (relative to the window's client area; does not include the title bar or window borders)
+- `behavior`: Pointer to a click behavior (`TimeClickBehavior` or `ColorClickBehavior`)
 
 ## 🛠️ Build
 

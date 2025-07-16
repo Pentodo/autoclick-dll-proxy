@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <thread>
+#include <mutex>
 
 const wchar_t *WINDOW_TITLE = L"SpaceIdle";
 
@@ -9,6 +10,16 @@ struct ClickBehavior
     virtual void run(int x, int y, HWND hwnd) = 0;
 };
 
+std::mutex clickMutex;
+
+void SendClick(int x, int y, HWND hwnd)
+{
+    std::lock_guard<std::mutex> lock(clickMutex);
+    LPARAM lParam = (y << 16) | (x & 0xFFFF);
+    SendMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lParam);
+    SendMessage(hwnd, WM_LBUTTONUP, 0, lParam);
+}
+
 struct TimeClickBehavior : public ClickBehavior
 {
     int wait_ms;
@@ -17,9 +28,7 @@ struct TimeClickBehavior : public ClickBehavior
     {
         while (true)
         {
-            LPARAM lParam = (y << 16) | (x & 0xFFFF);
-            SendMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lParam);
-            SendMessage(hwnd, WM_LBUTTONUP, 0, lParam);
+            SendClick(x, y, hwnd);
             Sleep(wait_ms);
         }
     }
@@ -38,14 +47,9 @@ struct ColorClickBehavior : public ClickBehavior
         {
             COLORREF pixel = GetPixel(hdc, pt.x, pt.y);
             if (pixel == color)
-            {
-                LPARAM lParam = (y << 16) | (x & 0xFFFF);
-                SendMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lParam);
-                SendMessage(hwnd, WM_LBUTTONUP, 0, lParam);
-            }
+                SendClick(x, y, hwnd);
             Sleep(100);
         }
-        ReleaseDC(NULL, hdc);
     }
 };
 
@@ -59,25 +63,25 @@ struct ClickPoint
 };
 
 // Example: TIME MODE
-// The ms values below are chosen so that clicks never overlap.
-// They are not multiples of each other and do not share common divisors.
 // ----
-// TimeClickBehavior shieldBoostInterval(45001);
-// TimeClickBehavior laserBoostInterval(5003);
-// TimeClickBehavior kineticVolleyInterval(45011);
+// TimeClickBehavior shieldBoostInterval(45000);
+// TimeClickBehavior laserBoostInterval(5000);
+// TimeClickBehavior kineticVolleyInterval(45000);
 // ----
 // Benefits: more performance-friendly, less CPU usage.
 // Case: if you want to click at specific intervals regardless of the pixel color.
 
 // Example: COLOR MODE
-ColorClickBehavior white(RGB(255, 255, 255));
+// ----
+ColorClickBehavior whiteColor(RGB(255, 255, 255));
+// ----
 // Benefits: more accurate, clicks only when the pixel color matches.
 // Case: if you want to click only when a specific pixel color is present.
 
 ClickPoint clickPoints[] = {
-    {31, 807, &white},
-    {99, 824, &white},
-    {167, 817, &white}};
+    {31, 807, &whiteColor},
+    {99, 824, &whiteColor},
+    {167, 817, &whiteColor}};
 const int numPoints = sizeof(clickPoints) / sizeof(clickPoints[0]);
 
 void ClickPointThread(const ClickPoint &point, HWND hwnd)
