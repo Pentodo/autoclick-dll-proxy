@@ -11,31 +11,57 @@ A Windows DLL proxy for `dinput8.dll` that automatically clicks at configurable 
 - 🛡️ **No Overlapping Clicks** (uses coprime intervals)
 - 🪟 **Client Area Coordinates** (ignores window title bar)
 - 🔗 **DirectInput8 Proxy** (forwards calls to original system DLL)
+- 🎨 **Color-Based Clicks**: Click only when a pixel matches a specific color
+- 🧩 **Flexible Click Behavior**: Choose between time-based or color-based clicking for each point
 
 ## 🖱️ How It Works
 
 - Injects into the target process as `dinput8.dll`
 - Finds the window by its title (`SpaceIdle` by default)
 - Spawns a thread for each click point
-- Each thread clicks at its position at its own interval
+- Each thread clicks at its position at its own interval or when a color matches
 - Forwards DirectInput8 calls to the real system DLL
 
 ## ⚙️ Configuration
 
-Edit the `ClickPoint` array in `AutoClickProxy.cpp`:
+Edit the `ClickPoint` array and behaviors in `AutoClickProxy.cpp` as desired:
+
+### ⏱️ Time-Based Clicking
+
+Use independent intervals for each point:
 
 ```cpp
-// The wait_ms values below are chosen so that clicks never overlap.
-// They are not multiples of each other and do not share common divisors.
-const ClickPoint clickPoints[] = {
-    {30, 834, 45001},
-    {100, 834, 5003},
-    {170, 834, 45011}
+// Example 1: Time-based click behaviors
+TimeClickBehavior shieldBoostInterval(45001);
+TimeClickBehavior laserBoostInterval(5003);
+TimeClickBehavior kineticVolleyInterval(45011);
+
+ClickPoint clickPoints[] = {
+    {30, 834, &shieldBoostInterval},
+    {100, 834, &laserBoostInterval},
+    {170, 834, &kineticVolleyInterval}
 };
 ```
 
-- `x`, `y`: Coordinates relative to the window's client area (not including the title bar)
-- `wait_ms`: Interval in milliseconds for each click point
+### 🎨 Color-Based Clicking
+
+Click only when the pixel color matches:
+
+```cpp
+// Example 2: Color-based click behavior
+ColorClickBehavior white(RGB(255, 255, 255));
+
+ClickPoint clickPoints[] = {
+    {31, 807, &white},
+    {99, 824, &white},
+    {167, 817, &white}
+};
+```
+
+**Parameters:**
+
+- `x`, `y`: Horizontal and vertical position of the click, relative to the window's client area (the content area, not including the title bar or window borders)
+- `behavior`: Pointer to a click behavior (time-based or color-based)
 
 ## 🛠️ Build
 
@@ -46,7 +72,7 @@ For Windows, it is recommended to use MinGW-w64 (GCC for Windows), but it is not
 g++ -shared -static-libgcc -static-libstdc++ -static -O2 -o dinput8.dll AutoClickProxy.cpp
 ```
 
-Alternatively, the Makefile is available:
+Alternatively, the [Makefile](Makefile) is available:
 
 ```sh
 # Run 'make clean' to delete the DLL before building, if needed
