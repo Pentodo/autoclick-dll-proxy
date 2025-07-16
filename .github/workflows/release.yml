@@ -19,7 +19,7 @@ jobs:
         run: choco install mingw -y
       - name: Build DLL
         run: |
-          g++ -shared -o dinput8.dll AutoClickProxy.cpp -static-libgcc -static-libstdc++ -static
+          g++ -shared -o dinput8.dll AutoClickProxy.cpp -static-libgcc -static-libstdc++ -static -lgdi32
       - uses: actions/upload-artifact@v4
         with:
           name: dinput8
