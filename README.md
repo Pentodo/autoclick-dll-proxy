@@ -51,7 +51,7 @@ For Windows, it is recommended to use MinGW-w64 (GCC for Windows), but it is not
 
 ```sh
 # Compile as DLL, statically linking C++ libraries
-g++ -shared -static-libgcc -static-libstdc++ -static -O2 -o dinput8.dll AutoClickProxy.cpp
+g++ -shared -static-libgcc -static-libstdc++ -static -O2 -o dinput8.dll AutoClickProxy.cpp -lgdi32
 ```
 
 Alternatively, the [Makefile](Makefile) is available:
