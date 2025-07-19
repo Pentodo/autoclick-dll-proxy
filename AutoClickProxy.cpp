@@ -14,8 +14,8 @@ void SendClick(int x, int y, HWND hwnd)
 {
     std::lock_guard<std::mutex> lock(clickMutex);
     LPARAM lParam = (y << 16) | (x & 0xFFFF);
-    SendMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lParam);
-    SendMessage(hwnd, WM_LBUTTONUP, 0, lParam);
+    PostMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lParam);
+    PostMessage(hwnd, WM_LBUTTONUP, 0, lParam);
 }
 
 struct TimeClickBehavior : public ClickBehavior
