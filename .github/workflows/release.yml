@@ -22,8 +22,10 @@ jobs:
           g++ -shared -static-libgcc -static-libstdc++ -static -O2 -o dinput8.dll AutoClickProxy.cpp -lgdi32
       - uses: actions/upload-artifact@v4
         with:
-          name: dinput8
-          path: dinput8.dll
+          name: autoclick-artifacts
+          path: |
+            dinput8.dll
+            config.ini
   release:
     needs: build
     runs-on: windows-latest
@@ -31,14 +33,16 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          path: ./artifacts
-      - name: List artifacts
+          name: autoclick-artifacts
+          path: ./release
+      - name: List release files
+        run: dir ./release
+      - name: Create ZIP package
         run: |
-          echo "Listing artifacts directory:"
-          dir ./artifacts
+          powershell Compress-Archive -Path ./release/dinput8.dll, ./release/config.ini -DestinationPath ./autoclick-release.zip
       - uses: softprops/action-gh-release@v2
         with:
-          files: ./artifacts/**/dinput8.dll
+          files: ./autoclick-release.zip
           draft: false
           prerelease: false
           generate_release_notes: true
