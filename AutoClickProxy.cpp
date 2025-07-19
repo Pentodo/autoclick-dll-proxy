@@ -2,8 +2,6 @@
 #include <thread>
 #include <mutex>
 
-const wchar_t *WINDOW_TITLE = L"SpaceIdle";
-
 struct ClickBehavior
 {
     virtual ~ClickBehavior() {}
@@ -87,12 +85,44 @@ void ClickPointThread(const ClickPoint &point, HWND hwnd)
     point.behavior->run(point.x, point.y, hwnd);
 }
 
+HWND GetMainWindowHandle()
+{
+    DWORD currentPID = GetCurrentProcessId();
+    HWND hwnd = nullptr;
+    struct EnumData
+    {
+        DWORD pid;
+        HWND hwnd;
+    } data = {currentPID, nullptr};
+    auto EnumProc = [](HWND hWnd, LPARAM lParam) -> BOOL
+    {
+        EnumData *pData = (EnumData *)lParam;
+        DWORD winPID = 0;
+        GetWindowThreadProcessId(hWnd, &winPID);
+        if (winPID == pData->pid && GetWindow(hWnd, GW_OWNER) == nullptr && IsWindowVisible(hWnd))
+        {
+            pData->hwnd = hWnd;
+            return FALSE;
+        }
+        return TRUE;
+    };
+    EnumWindows(EnumProc, (LPARAM)&data);
+    return data.hwnd;
+}
+
+// Uncomment the following line to use a specific window title.
+// ----
+// const wchar_t *WINDOW_TITLE = L"SpaceIdle";
+// ----
+// Attention: Remember to uncomment the line in the AutoClickThread function as well.
+
 void AutoClickThread()
 {
     HWND hwnd = nullptr;
     while (!hwnd)
     {
-        hwnd = FindWindowW(nullptr, WINDOW_TITLE);
+        // hwnd = FindWindowW(nullptr, WINDOW_TITLE);
+        hwnd = GetMainWindowHandle(); // Comment this line if you want to use FindWindowW with a specific title.
         Sleep(1000);
     }
     for (int i = 0; i < numPoints; ++i)
