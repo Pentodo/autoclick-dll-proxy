@@ -37,12 +37,17 @@ jobs:
           path: ./release
       - name: List release files
         run: dir ./release
+      - name: Set ZIP name with version
+        id: zipname
+        run: |
+          $tag = "${{ github.ref }}" -replace 'refs/tags/', ''
+          echo "ZIP_NAME=autoclick-$tag.zip" | Out-File -FilePath $env:GITHUB_ENV -Append
       - name: Create ZIP package
         run: |
-          powershell Compress-Archive -Path ./release/dinput8.dll, ./release/config.ini -DestinationPath ./autoclick-release.zip
+          powershell Compress-Archive -Path ./release/dinput8.dll, ./release/config.ini -DestinationPath ./$env:ZIP_NAME
       - uses: softprops/action-gh-release@v2
         with:
-          files: ./autoclick-release.zip
+          files: ${{ env.ZIP_NAME }}
           draft: false
           prerelease: false
           generate_release_notes: true
