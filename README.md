@@ -11,39 +11,44 @@ A Windows DLL proxy for `dinput8.dll` that automatically clicks at configurable 
 - ➕ Multiple click points supported
 - 🪟 Runs as a proxy DLL (`dinput8.dll`) for easy injection
 - 🔒 Thread-safe: prevents simultaneous clicks
-- 🛠️ Simple configuration in [AutoClickProxy.cpp](AutoClickProxy.cpp)
+- 🛠️ Simple configuration via [config.ini](config.ini)
 
 ## 🖱️ How It Works
 
 - Injects into the target process as `dinput8.dll`
-- ~~Finds the window by its title~~ _(no longer necessary)_
+- Forwards `DirectInput8` calls to the real system DLL
+- Reads click configuration from `config.ini`
+- ~~Finds the window by its title~~ _(no longer necessary, optional)_
 - Spawns a thread for each click point
 - Each thread clicks at its position at its own `interval` or when a `color` matches
-- Forwards `DirectInput8` calls to the real system DLL
 
 ## ⚙️ Configuration
 
-Define your click points and behaviors in [AutoClickProxy.cpp](AutoClickProxy.cpp):
+Configure your click points and behaviors in the [`config.ini`](config.ini) file (no need to recompile):
 
-```cpp
-// Time-based click
-TimeClickBehavior fiveSeconds(5000);
+```ini
+# Example configuration for AutoClickProxy
 
-// Color-based click
-ColorClickBehavior white(RGB(255, 255, 255));
+# (Optional) Window title to search for the target window by name
+# window_title=SpaceIdle
 
-// Example using both methods
-ClickPoint clickPoints[] = {
-    {30, 640, &fiveSeconds},    // time-based
-    {100, 640, &fiveSeconds},   // time-based
-    {170, 800, &white}          // color-based
-};
+# Format: x y type parameters
+# For type 'time': x y time ms
+# For type 'color': x y color r g b
+
+# Time-based click (every 1000ms)
+50 100 time 1000
+
+# Color-based click (when pixel is RGB 255 255 255)
+200 300 color 255 255 255
 ```
 
-**📝 ClickPoint attributes**
+**📝 ClickPoint fields**
 
-- `x`, `y`: Horizontal and vertical position of the pixel to click (relative to the window's client area; does not include the title bar or window borders)
-- `behavior`: Pointer to a click behavior (`TimeClickBehavior` or `ColorClickBehavior`)
+- `x`, `y`: Pixel position to click (relative to the window's client area)
+- `type`: `time` for interval-based, `color` for color-based
+- For `time`: `ms` is the interval in milliseconds
+- For `color`: `r g b` is the target color (0-255)
 
 ## 🛠️ Build
 
@@ -61,7 +66,7 @@ Alternatively, the [Makefile](Makefile) is available:
 make
 ```
 
-Place the resulting `dinput8.dll` in the target application's binary folder.
+Place the resulting `dinput8.dll` and `config.ini` in the target application's binary folder.
 
 ## ⚠️ Warnings
 
