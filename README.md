@@ -16,10 +16,10 @@ A Windows DLL proxy for `dinput8.dll` that automatically clicks at configurable 
 ## 🖱️ How It Works
 
 - Injects into the target process as `dinput8.dll`
-- Finds the window by its title (`SpaceIdle` by default)
+- ~~Finds the window by its title~~ _(no longer necessary)_
 - Spawns a thread for each click point
-- Each thread clicks at its position at its own interval or when a color matches
-- Forwards DirectInput8 calls to the real system DLL
+- Each thread clicks at its position at its own `interval` or when a `color` matches
+- Forwards `DirectInput8` calls to the real system DLL
 
 ## ⚙️ Configuration
 
