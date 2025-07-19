@@ -1,6 +1,10 @@
 #include <windows.h>
 #include <thread>
 #include <mutex>
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 struct ClickBehavior
 {
@@ -60,25 +64,47 @@ struct ClickPoint
     ClickPoint(int x_, int y_, ClickBehavior *b) : x(x_), y(y_), behavior(b) {}
 };
 
-// Example: TIME MODE
-// ----
-// TimeClickBehavior fiveSeconds(5000);
-// ----
-// Benefits: more performance-friendly, less CPU usage.
-// Case: if you want to click at specific intervals regardless of the pixel color.
+std::wstring windowTitle;
 
-// Example: COLOR MODE
-// ----
-ColorClickBehavior white(RGB(255, 255, 255));
-// ----
-// Benefits: more accurate, clicks only when the pixel color matches.
-// Case: if you want to click only when a specific pixel color is present.
+std::vector<ClickBehavior *> behaviors;
+std::vector<ClickPoint> clickPoints;
 
-ClickPoint clickPoints[] = {
-    {31, 807, &white},
-    {99, 824, &white},
-    {167, 817, &white}};
-const int numPoints = sizeof(clickPoints) / sizeof(clickPoints[0]);
+void LoadConfig(const char *filename)
+{
+    std::ifstream file(filename);
+    std::string line;
+    while (std::getline(file, line))
+    {
+        if (line.empty() || line[0] == '#')
+            continue;
+        if (line.rfind("window_title=", 0) == 0)
+        {
+            std::string title = line.substr(13);
+            windowTitle = std::wstring(title.begin(), title.end());
+            continue;
+        }
+        std::istringstream iss(line);
+        int x, y;
+        std::string type;
+        iss >> x >> y >> type;
+        if (type == "time")
+        {
+            int ms;
+            iss >> ms;
+            auto *beh = new TimeClickBehavior(ms);
+            behaviors.push_back(beh);
+            clickPoints.emplace_back(x, y, beh);
+        }
+        else if (type == "color")
+        {
+            int r, g, b;
+            iss >> r >> g >> b;
+            auto *beh = new ColorClickBehavior(RGB(r, g, b));
+            behaviors.push_back(beh);
+            clickPoints.emplace_back(x, y, beh);
+        }
+    }
+}
 
 void ClickPointThread(const ClickPoint &point, HWND hwnd)
 {
@@ -110,23 +136,20 @@ HWND GetMainWindowHandle()
     return data.hwnd;
 }
 
-// Uncomment the following line to use a specific window title.
-// ----
-// const wchar_t *WINDOW_TITLE = L"SpaceIdle";
-// ----
-// Attention: Remember to uncomment the line in the AutoClickThread function as well.
-
 void AutoClickThread()
 {
+    LoadConfig("config.ini");
     HWND hwnd = nullptr;
     while (!hwnd)
     {
-        // hwnd = FindWindowW(nullptr, WINDOW_TITLE);
-        hwnd = GetMainWindowHandle(); // Comment this line if you want to use FindWindowW with a specific title.
+        if (!windowTitle.empty())
+            hwnd = FindWindowW(nullptr, windowTitle.c_str());
+        else
+            hwnd = GetMainWindowHandle();
         Sleep(1000);
     }
-    for (int i = 0; i < numPoints; ++i)
-        std::thread(ClickPointThread, clickPoints[i], hwnd).detach();
+    for (const auto &point : clickPoints)
+        std::thread(ClickPointThread, point, hwnd).detach();
 }
 
 // Proxy for DirectInput8Create: forwards calls to the original dinput8.dll from the system directory.
