@@ -16,6 +16,10 @@ std::mutex clickMutex;
 
 void SendClick(int x, int y, HWND hwnd)
 {
+    // Wait until the left mouse button is released before clicking.
+    // This allows users to click and drag without interference.
+    while ((GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0)
+        Sleep(100);
     std::lock_guard<std::mutex> lock(clickMutex);
     LPARAM lParam = (y << 16) | (x & 0xFFFF);
     PostMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lParam);
